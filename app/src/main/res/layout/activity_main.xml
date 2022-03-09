@@ -8,6 +8,11 @@
     android:padding="8dp"
     tools:context=".MainActivity">
 
+    <EditText
+        android:id="@+id/edtSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="150dp">
@@ -40,5 +45,19 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycleview_person"
         android:layout_width="match_parent"
-        android:layout_height="250dp" />
+        android:layout_height="150dp" />
+
+    <Button
+        android:id="@+id/call_rxapi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Call RX API" />
+
+    <Button
+        android:id="@+id/call_mutilrxapi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Call Mutil RX API" />
+
+
 </LinearLayout>
