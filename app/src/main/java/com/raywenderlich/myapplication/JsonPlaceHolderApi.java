@@ -13,6 +13,6 @@ public interface JsonPlaceHolderApi {
     @GET("posts")
     Call<List<Post>> getPosts();
 
-    @GET("posts")
+    @GET("posts1")
     Observable<List<Post>> getRx_Posts();
 }

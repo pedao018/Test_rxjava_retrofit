@@ -5,17 +5,23 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
+import android.os.PersistableBundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.raywenderlich.myapplication.adapter.PersonAdapter;
 import com.raywenderlich.myapplication.model.Person;
 import com.raywenderlich.myapplication.model.Post;
+import com.raywenderlich.myapplication.test_activity.TestActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +41,7 @@ import io.reactivex.rxjava3.subjects.PublishSubject;
 public class MainActivity extends AppCompatActivity implements PresenterInterface {
 
     private TextView textViewResult, textViewRx_result;
-    private Button callApiBtn, singleBtn, callRxApiBtn, callMutilRxApiBtn;
+    private Button callApiBtn, singleBtn, callRxApiBtn, callMutilRxApiBtn, openActivityBtn;
     private EditText edtSearch;
     private RecyclerView recyclerViewPerson;
     private PersonAdapter personAdapter;
@@ -56,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements PresenterInterfac
         singleBtn = findViewById(R.id.rx_single);
         callRxApiBtn = findViewById(R.id.call_rxapi);
         callMutilRxApiBtn = findViewById(R.id.call_mutilrxapi);
+        openActivityBtn = findViewById(R.id.call_openactivity);
         callApiBtn.setOnClickListener(view -> {
             myPresenter.callAPI_Get_ListPost();
         });
@@ -117,6 +124,10 @@ public class MainActivity extends AppCompatActivity implements PresenterInterfac
 
         //bindData();
         Log.e("hahaha", "In ra");
+        openActivityBtn.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, TestActivity.class);
+            startActivity(intent);
+        });
     }
 
     private String searchAPI(String s) {
@@ -163,7 +174,7 @@ public class MainActivity extends AppCompatActivity implements PresenterInterfac
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        compositeDisposable.dispose();
+        //compositeDisposable.dispose();
         Log.e("hahaha", "Dispose");
     }
 
@@ -337,6 +348,7 @@ public class MainActivity extends AppCompatActivity implements PresenterInterfac
     }
 
     //Goi song song API ket hop Save database dung RxAndroid
+    //Khoi can goi subscribeOn vi retrofit no tu dong dua vao thread Okhttp gi do
     private void getMutilRxApi_AndSaveDatabase_1() {
         Observable<List<String>> api1 = myPresenter.getRxApi_1()
                 .map(posts -> myPresenter.handleResult(posts)).toList().toObservable();
@@ -402,6 +414,7 @@ public class MainActivity extends AppCompatActivity implements PresenterInterfac
                         Log.e("hahaha", "Xu ly: " + rxApi_1.api1Datas.size() + " "
                                 + rxApi_1.api2Datas.size() + " " +
                                 rxApi_1.api3Datas.size());
+                        Toast.makeText(getApplicationContext(), "Hahahaha", Toast.LENGTH_LONG).show();
                     }
 
                     @Override
@@ -496,6 +509,41 @@ public class MainActivity extends AppCompatActivity implements PresenterInterfac
                         //textViewRx_result.setText(myPresenter.getRxText());
                     }
                 });
+    }
+
+    private void getRxMutil_AndSaveDatabase_1() {
+        Observable<List<String>> api1 = myPresenter.getRxApi_1()
+                .map(posts -> myPresenter.handleResult(posts)).toList().toObservable();
+        Observable<List<Post>> api2 = myPresenter.getRxApi_1();
+        Observable<List<Post>> api3 = myPresenter.getRxApi_1();
+        Observable.just(api1, api2, api3).subscribeOn(Schedulers.io());
+        Observable<RxApi_1> apiAll = Observable.zip(api1, api2, api3, (api1Datas, api2Datas, api3Datas) -> new RxApi_1(api1Datas, api2Datas, api3Datas));
+        apiAll.subscribe(new Observer<RxApi_1>() {
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+                compositeDisposable.add(d);
+                textViewRx_result.setText("Calling multile API and Savedata");
+                recyclerViewPerson.setAdapter(null);
+                Log.e("hahaha", "Xu ly: getMutilRxApi_AndSaveDatabase_1() onSubscribe " + Thread.currentThread().getName());
+
+            }
+
+            @Override
+            public void onNext(@NonNull RxApi_1 rxApi_1) {
+                Log.e("hahaha", "Xu ly: getMutilRxApi_AndSaveDatabase_1() onNext()" + Thread.currentThread().getName()); //Do onSubscribe main
+                saveDatabase_RxMutilRxApi(rxApi_1);
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
     }
 
     private class RxApi_1 {
